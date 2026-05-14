@@ -27,11 +27,12 @@
 
 ## Project Overview
 
-A reverse-engineered proxy for the GitHub Copilot API that exposes it as an OpenAI and Anthropic compatible service. This allows you to use GitHub Copilot with any tool that supports the OpenAI Chat Completions API or the Anthropic Messages API, including to power [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview).
+A reverse-engineered proxy for the GitHub Copilot API that exposes it as an OpenAI and Anthropic compatible service. This allows you to use GitHub Copilot with any tool that supports the OpenAI Chat Completions API, OpenAI Responses API, or the Anthropic Messages API, including to power [Codex](https://developers.openai.com/codex/) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview).
 
 ## Features
 
-- **OpenAI & Anthropic Compatibility**: Exposes GitHub Copilot as an OpenAI-compatible (`/v1/chat/completions`, `/v1/models`, `/v1/embeddings`) and Anthropic-compatible (`/v1/messages`) API.
+- **OpenAI & Anthropic Compatibility**: Exposes GitHub Copilot as an OpenAI-compatible (`/v1/responses`, `/v1/chat/completions`, `/v1/models`, `/v1/embeddings`) and Anthropic-compatible (`/v1/messages`) API.
+- **Codex Integration**: Run Codex against the local OpenAI Responses-compatible endpoint with a custom model provider.
 - **Claude Code Integration**: Easily configure and launch [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) to use Copilot as its backend with a simple command-line flag (`--claude-code`).
 - **Usage Dashboard**: A web-based dashboard to monitor your Copilot API usage, view quotas, and see detailed statistics.
 - **Rate Limit Control**: Manage API usage with rate-limiting options (`--rate-limit`) and a waiting mechanism (`--wait`) to prevent errors from rapid requests.
@@ -187,6 +188,7 @@ These endpoints mimic the OpenAI API structure.
 
 | Endpoint                    | Method | Description                                               |
 | --------------------------- | ------ | --------------------------------------------------------- |
+| `POST /v1/responses`        | `POST` | Creates a model response using the Responses API shape.   |
 | `POST /v1/chat/completions` | `POST` | Creates a model response for the given chat conversation. |
 | `GET /v1/models`            | `GET`  | Lists the currently available models.                     |
 | `POST /v1/embeddings`       | `POST` | Creates an embedding vector representing the input text.  |
@@ -277,6 +279,44 @@ The dashboard provides a user-friendly interface to view your Copilot usage data
 - **Detailed Information**: See the full JSON response from the API for a detailed breakdown of all available usage statistics.
 - **URL-based Configuration**: You can also specify the API endpoint directly in the URL using a query parameter. This is useful for bookmarks or sharing links. For example:
   `https://ericc-ch.github.io/copilot-api?endpoint=http://your-api-server/usage`
+
+## Using with Codex
+
+This proxy can be used as a custom OpenAI Responses-compatible model provider for [Codex](https://developers.openai.com/codex/).
+
+First, start the proxy with any supported method. For example:
+
+```sh
+npx copilot-api@latest start
+```
+
+Add a custom provider and profile to `~/.codex/config.toml`:
+
+```toml
+[model_providers.copilot-api]
+name = "copilot-api"
+base_url = "http://localhost:4141/v1"
+wire_api = "responses"
+
+[profiles.copilot-api]
+model_provider = "copilot-api"
+model = "gpt-4.1"
+```
+
+Run Codex with that profile:
+
+```sh
+codex -p copilot-api
+```
+
+You can also try it without editing `~/.codex/config.toml` by passing the provider config on the command line:
+
+```sh
+codex \
+  -c 'model_providers.copilot-api={ name = "copilot-api", base_url = "http://localhost:4141/v1", wire_api = "responses" }' \
+  -c 'model_provider="copilot-api"' \
+  -m gpt-4.1
+```
 
 ## Using with Claude Code
 
