@@ -382,6 +382,21 @@ bun run dev
 bun run start
 ```
 
+### Local Launchers
+
+Convenience wrappers that resolve the repo root, install dependencies on first
+run, and forward all arguments to `src/main.ts`:
+
+- **Linux / macOS:** `./copilot-api-local <command> [options]`
+- **Windows (PowerShell):** `.\copilot-api-local.ps1 <command> [options]`
+
+```powershell
+# Windows: allow running local scripts once, then use the launcher
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+.\copilot-api-local.ps1 auth
+.\copilot-api-local.ps1 start
+```
+
 ## Usage Tips
 
 - To avoid hitting GitHub Copilot's rate limits, you can use the following flags:
