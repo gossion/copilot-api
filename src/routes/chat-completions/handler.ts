@@ -47,6 +47,15 @@ export async function handleCompletion(c: Context) {
     consola.debug("Set max_tokens to:", JSON.stringify(payload.max_tokens))
   }
 
+  // LiteLLM may send both fields when translating an OpenAI-compatible
+  // request. The Copilot upstream rejects that combination; its newer
+  // models require max_completion_tokens, so retain that field when present.
+  if (!isNullish(payload.max_completion_tokens)) {
+    const { max_tokens: _maxTokens, ...normalizedPayload } = payload
+    payload = normalizedPayload
+    consola.debug("Dropped max_tokens in favor of max_completion_tokens")
+  }
+
   const response = await createChatCompletions(payload)
 
   if (isNonStreaming(response)) {
